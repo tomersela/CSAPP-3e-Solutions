@@ -1,0 +1,13 @@
+{
+    "files.associations": {
+        "assert.h": "c",
+        "stdbool.h": "c",
+        "__locale": "c",
+        "stdio.h": "c",
+        "__string": "c",
+        "atomic": "c",
+        "cstring": "c",
+        "memory": "c",
+        "utility": "c"
+    }
+}
