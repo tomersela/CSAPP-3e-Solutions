@@ -4,12 +4,12 @@
 /* Addition that saturates to TMin or TMax */
 int saturating_add(int x, int y) {
     int word_size = sizeof(int) << 3;
-    int msb_shift = word_size - 1;
+    int sign_shift = word_size - 1;
 
     int sum = x + y;
-    unsigned x_sign = (unsigned) x >> msb_shift;
-    unsigned y_sign = (unsigned) y >> msb_shift;
-    int sum_sign = sum >> msb_shift;
+    unsigned x_sign = (unsigned) x >> sign_shift;
+    unsigned y_sign = (unsigned) y >> sign_shift;
+    int sum_sign = sum >> sign_shift;
     
     // there's an overflow if the signs of x and y are the same but the sign of sum is different
     int is_overflow = (x_sign == y_sign) & (x_sign ^ sum_sign);
