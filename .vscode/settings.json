@@ -43,6 +43,9 @@
         "typeinfo": "cpp",
         "unordered_map": "cpp",
         "vector": "cpp",
-        "string.h": "c"
+        "string.h": "c",
+        "climits": "cpp",
+        "sstream": "cpp",
+        "streambuf": "cpp"
     }
 }
