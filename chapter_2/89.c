@@ -1,6 +1,4 @@
-#include<stdio.h>
 #include<assert.h>
-#include<limits.h>
 
 // A. (float) x == (float) dx
 //    Always 1
