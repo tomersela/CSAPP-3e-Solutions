@@ -49,7 +49,7 @@ int main() {
 
         assert((is_nan && half_fb_nan) || half_fb == f/2);
 
-        if (i % 42949673 == 0) printf("completed %.0f%%\n", (float) i / UINT_MAX * 100.0);
+        if (i % 42949672 == 0) printf("completed %.0f%%\n", (float) i / UINT_MAX * 100.0);
     }
 
     printf("done\n");

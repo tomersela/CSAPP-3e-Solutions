@@ -31,11 +31,11 @@ int main() {
 
         float abs_fb = to_float(float_absval(fb));
 
-        bool is_nan = f != f; // my machine negates nan (changing the sign bit), but float_negate doesn't
+        bool is_nan = f != f;
         bool abs_is_non = abs_fb != abs_fb;
         assert((is_nan && abs_is_non) || abs_fb == fabs(f)); // either both nan or equal
         
-        if (i % 42949673 == 0) printf("completed %.0f%%\n", (float) i / UINT_MAX * 100.0);
+        if (i % 42949672 == 0) printf("completed %.0f%%\n", (float) i / UINT_MAX * 100.0);
     }
 
     printf("done\n");

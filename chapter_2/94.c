@@ -51,7 +51,7 @@ int main() {
         bool twice_is_non = twice_fb != twice_fb;
         assert((is_nan && twice_is_non) || twice_fb == 2*f); // either both nan or equal
 
-        if (i % 42949673 == 0) printf("completed %.0f%%\n", (float) i / UINT_MAX * 100.0);
+        if (i % 42949672 == 0) printf("completed %.0f%%\n", (float) i / UINT_MAX * 100.0);
     }
 
     printf("done\n");

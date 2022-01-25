@@ -37,7 +37,7 @@ int main() {
         bool negated_is_non = negated_fb != negated_fb;
         assert((is_nan && negated_is_non) || negated_fb == -f); // either both nan or equal
 
-        if (i % 42949673 == 0) printf("completed %.0f%%\n", (float) i / UINT_MAX * 100.0);
+        if (i % 42949672 == 0) printf("completed %.0f%%\n", (float) i / UINT_MAX * 100.0);
     }
 
     printf("done\n");
