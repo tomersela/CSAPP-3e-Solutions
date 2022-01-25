@@ -46,6 +46,7 @@
         "string.h": "c",
         "climits": "cpp",
         "sstream": "cpp",
-        "streambuf": "cpp"
+        "streambuf": "cpp",
+        "complex": "c"
     }
 }

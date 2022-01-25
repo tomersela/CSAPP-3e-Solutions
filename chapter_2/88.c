@@ -98,7 +98,7 @@ V = 3/2 * 2^8 = 3 * 2^7 = 384
 Format B:
 S = 0
 M = 0b11 = 0b11 * 2^-1  =>  f = 0b0.1
-Now we should have E = 8 in order to move M's decimal point so it will be equal to 3 * 2^7
+Now we should have E = 8 in order to move M's binary point so it will be equal to 3 * 2^7
 E = 8 = e - Bias = e - 7  =>  e = 15 Invalid value (our biggest E is twice the bias - 14)
 Since we can't represent this value, we'll round up to +∞
 0 1111 0000
