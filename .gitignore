@@ -13,6 +13,7 @@
 *.exp
 
 .vscode
+.DS_Store
 
 # Precompiled Headers
 *.gch
