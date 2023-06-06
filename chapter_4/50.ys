@@ -1,0 +1,76 @@
+# Execution begins at address 0 
+    .pos 0
+    irmovq stack, %rsp  # Set up stack pointer
+    call main           # Execute main program
+    halt                # Terminate program
+
+# Array of 8 elements
+    .align 8
+array:    .quad 0x000000000000
+    .quad 0x000000000000
+    .quad 0x000000000000
+    .quad 0x000000000000
+    .quad 0x000000000000
+    .quad 0x000000000000
+    .quad 0x000000000000
+    .quad 0x000000000000
+
+    .align 8
+jump_table:    .quad C0       # case 0
+    .quad default  # case 1 
+    .quad C5       # case 2
+    .quad C3       # case 3
+    .quad default  # case 4
+    .quad C5       # case 5
+
+main:
+    pushq %rbx
+    irmovq array, %rsi
+    irmovq $8, %r14
+    irmovq $1, %rbx
+    irmovq $0, %rdi
+loop:
+    addq %rbx, %rdi
+    call switchv
+    rmmovq %rax, (%rsi)
+    addq %r14, %rsi
+    irmovq $8, %r10
+    subq %rdi, %r10
+    jg loop
+done:
+halt
+    popq %rbx
+    ret
+
+# long switchv(long idx)
+# idx in %rdi
+switchv:
+    rrmovq %rdi, %r11
+    irmovq  0xddd, %rax
+    irmovq  $5, %r10
+    subq    %r10, %r11
+    jg default
+    rrmovq %rdi, %r11           # %r11 = idx
+    addq %r11, %r11             # %r11 = 2*idx
+    addq %r11, %r11             # %r11 = 4*idx
+    addq %r11, %r11             # %r11 = 8*idx
+    irmovq jump_table, %r12
+    addq %r11, %r12
+    mrmovq (%r12), %r13
+    pushq %r13
+    ret
+C0:
+    irmovq  0xaaa, %rax
+    jmp default
+C3:
+    irmovq  0xccc, %rax
+    jmp default
+C5:
+    irmovq  0xbbb, %rax
+    jmp default
+default:
+    ret
+
+# Stack starts here and grows to lower addresses
+    .pos 0x200
+stack:

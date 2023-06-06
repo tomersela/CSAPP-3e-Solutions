@@ -1,0 +1,70 @@
+                            | # Execution begins at address 0 
+0x000:                      |     .pos 0
+0x000: 30f40002000000000000 |     irmovq stack, %rsp  # Set up stack pointer
+0x00a: 803800000000000000   |     call main           # Execute main program
+0x013: 00                   |     halt                # Terminate program
+                            | 
+                            | # Array of 4 elements
+0x018:                      |     .align 8
+0x018: 0400000000000000     | array:    .quad 0x000000000004
+0x020: 0200000000000000     |     .quad 0x000000000002
+0x028: 0100000000000000     |     .quad 0x000000000001
+0x030: 0300000000000000     |     .quad 0x000000000003
+                            | 
+0x038:                      | main:
+0x038: 30f71800000000000000 |     irmovq array, %rdi
+0x042: 30f60400000000000000 |     irmovq $4, %rsi
+0x04c: 805600000000000000   |     call bubble_a        # bubble_a(array, 4)
+0x055: 90                   |     ret
+                            | 
+                            | # void bubble_a(long *data, long count)
+                            | # data in %rdi, count in %rsi
+0x056:                      | bubble_a:
+0x056: a05f                 |     pushq    %rbp
+0x058: 2045                 |     rrmovq    %rsp, %rbp
+0x05a: 30fa0800000000000000 |     irmovq  $8, %r10
+0x064: 6266                 |     andq    %rsi, %rsi
+0x066: 71f900000000000000   |     jle    done
+0x06f: 2068                 |     rrmovq %rsi, %r8
+0x071: 6088                 |     addq %r8, %r8               # %r8 = 2*count
+0x073: 6088                 |     addq %r8, %r8               # %r8 = 4*count
+0x075: 6088                 |     addq %r8, %r8               # %r8 = 8*count
+0x077: 6078                 |     addq %rdi, %r8              # %r8 = data + count
+0x079: 61a8                 |     subq %r10, %r8                # last = data + (count - 1)
+0x07b: 709300000000000000   |     jmp    outer_loop           # go to outer_loop
+0x084:                      | outer_loop_next:
+0x084: 61a8                 |     subq    %r10, %r8             # last = last - 1
+0x086: 2089                 |     rrmovq  %r8, %r9
+0x088: 6179                 |     subq    %rdi, %r9           # compare last with data
+0x08a: 72f900000000000000   |     jl    done                  # if last < data then return (outer loop condition: last >= data)
+0x093:                      | outer_loop:
+0x093: 2089                 |     rrmovq  %r8, %r9
+0x095: 6179                 |     subq    %rdi, %r9           # compare last with curr (curr == data at this point)
+0x097: 718400000000000000   |     jle    outer_loop_next      # if last <= curr then go to outer_loop_next (inner loop condition: curr < last)
+0x0a0: 2071                 |     rrmovq    %rdi, %rcx        # curr = data   (%rcx = data)
+0x0a2: 70ba00000000000000   |     jmp    inner_loop           # go to inner_loop
+0x0ab:                      | inner_loop_next:
+0x0ab: 2021                 |     rrmovq    %rdx, %rcx        # curr = curr++
+0x0ad: 2029                 |     rrmovq  %rdx, %r9
+0x0af: 6189                 |     subq    %r8, %r9            # compare curr with last
+0x0b1: 758400000000000000   |     jge    outer_loop_next      # if curr >= last go to outer_loop_next
+0x0ba:                      | inner_loop:
+0x0ba: 2012                 |     rrmovq  %rcx, %rdx
+0x0bc: 60a2                 |     addq    %r10, %rdx            # %rdx = curr + 1
+0x0be: 50010000000000000000 |     mrmovq    (%rcx), %rax      # %rax = *curr
+0x0c8: 50610800000000000000 |     mrmovq    8(%rcx), %rsi     # t = *(curr + 1)
+0x0d2: 2069                 |     rrmovq  %rsi, %r9
+0x0d4: 6109                 |     subq    %rax, %r9           # compare *(curr + 1) with *curr
+0x0d6: 220b                 |     cmovl %rax, %r11           # swap %rax and %rsi values
+0x0d8: 2260                 |     cmovl %rsi, %rax
+0x0da: 22b6                 |     cmovl %r11, %rsi
+0x0dc: 40010000000000000000 |     rmmovq    %rax, (%rcx)
+0x0e6: 40610800000000000000 |     rmmovq    %rsi, 8(%rcx)
+0x0f0: 70ab00000000000000   |     jmp    inner_loop_next      # go to inner_loop_next
+0x0f9:                      | done:
+0x0f9: b05f                 |     popq    %rbp
+0x0fb: 90                   |     ret                         # Return
+                            | 
+                            | # Stack starts here and grows to lower addresses
+0x200:                      |     .pos 0x200
+0x200:                      | stack:

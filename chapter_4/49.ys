@@ -1,0 +1,82 @@
+# Execution begins at address 0 
+    .pos 0
+    irmovq stack, %rsp  # Set up stack pointer
+    call main           # Execute main program
+    halt                # Terminate program
+
+# Array of 4 elements
+    .align 8
+array:    .quad 0x000000000004
+    .quad 0x000000000002
+    .quad 0x000000000001
+    .quad 0x000000000003
+
+main:
+    irmovq array, %rdi
+    irmovq $4, %rsi
+    call bubble_a        # bubble_a(array, 4)
+    ret
+
+# void bubble_a(long *data, long count)
+# data in %rdi, count in %rsi
+bubble_a:
+    pushq    %rbp
+    rrmovq    %rsp, %rbp
+    irmovq  $8, %r10
+    irmovq  $-1, %r11
+    andq    %rsi, %rsi
+    jle    done
+    rrmovq %rsi, %r8
+    addq %r8, %r8               # %r8 = 2*count
+    addq %r8, %r8               # %r8 = 4*count
+    addq %r8, %r8               # %r8 = 8*count
+    addq %rdi, %r8              # %r8 = data + count
+    subq %r10, %r8                # last = data + (count - 1)
+    jmp    outer_loop           # go to outer_loop
+outer_loop_next:
+    subq    %r10, %r8             # last = last - 1
+    rrmovq  %r8, %r9
+    subq    %rdi, %r9           # compare last with data
+    jl    done                  # if last < data then return (outer loop condition: last >= data)
+outer_loop:
+    rrmovq  %r8, %r9
+    subq    %rdi, %r9           # compare last with curr (curr == data at this point)
+    jle    outer_loop_next      # if last <= curr then go to outer_loop_next (inner loop condition: curr < last)
+    rrmovq    %rdi, %rcx        # curr = data   (%rcx = data)
+    jmp    inner_loop           # go to inner_loop
+inner_loop_next:
+    rrmovq    %rdx, %rcx        # curr = curr++
+    rrmovq  %rdx, %r9
+    subq    %r8, %r9            # compare curr with last
+    jge    outer_loop_next      # if curr >= last go to outer_loop_next
+inner_loop:
+    rrmovq  %rcx, %rdx
+    addq    %r10, %rdx            # %rdx = curr + 1
+    mrmovq    (%rcx), %rax      # %rax = *curr
+    mrmovq    8(%rcx), %rsi     # t = *(curr + 1)
+    irmovq  $0, %rbx
+    rrmovq  %rsi, %r9
+    subq    %rax, %r9           # compare *(curr + 1) with *curr
+    cmovge %r11, %r12            # %r12 is 1...1 if %r9 < %rax (means *(curr + 1) < *curr) otherwise %r12 equals 0
+    rrmovq %r12, %r13
+    xorq %r11, %r13             # %r13 = not %r12
+    rrmovq %r12, %r9
+    rrmovq %r13, %r14
+    andq %rax, %r9              # %r9 equals %rax if *(curr + 1) < *curr ;  otherwise %r9 equals 0
+    andq %rsi, %r14             # %r14 equals %rsi if *(curr + 1) >= *curr ; otherwise %r14 equals 0
+    addq %r14, %r9              # %r9 equals %rax if *(curr + 1) < *curr ; otherwise %r9 equals %rsi
+    rmmovq    %r9, (%rcx)
+    rrmovq %r12, %r9
+    rrmovq %r13, %r14
+    andq %rax, %r14             # %r14 equals %rax if *(curr + 1) >= *curr ;  otherwise %r14 equals 0
+    andq %rsi, %r9              # %r9 equals %rsi if *(curr + 1) < *curr ; otherwise %r9 equals 0
+    addq %r14, %r9              # %r9 equals %rsi if *(curr + 1) < *curr ; otherwise %r9 equals %rax
+    rmmovq    %r9, 8(%rcx)
+    jmp    inner_loop_next      # go to inner_loop_next
+done:
+    popq    %rbp
+    ret                         # Return
+
+# Stack starts here and grows to lower addresses
+    .pos 0x200
+stack:
