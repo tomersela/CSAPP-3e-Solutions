@@ -1,0 +1,127 @@
+#include <stdio.h>
+#include <arpa/inet.h>
+#include "csapp.h"
+#include "macos_helpers.h"
+
+static dispatch_semaphore_t gethostbyname_mutex;
+
+static void init_gethostbyname_mutex(void) {
+    gethostbyname_mutex = dispatch_semaphore_create(1);
+}
+
+int array_len(char **arr) {
+    int count = 0;
+    for (count = 0; arr[count] != NULL; count++) {}
+    return count;
+}
+
+char *copy_str(char *source) {
+    int length = strlen(source);
+    char *destination = (char *) Malloc((length + 1) * sizeof(char));
+    if (destination == NULL) {
+        printf("Memory allocation failed\n");
+        exit(1);
+    }
+    strncpy(destination, source, length);
+    destination[length] = '\0';
+
+    return destination;
+}
+
+struct hostent *gethostbyname_ts(char* name) {
+    struct hostent *result;
+    struct hostent *copy;
+
+    static pthread_once_t once = PTHREAD_ONCE_INIT;
+    Pthread_once(&once, init_gethostbyname_mutex);
+    P_dispatch(gethostbyname_mutex);
+    
+    copy = (struct hostent *) Malloc(sizeof(struct hostent));
+
+    result = gethostbyname(name);
+    copy->h_name = copy_str(result->h_name);
+
+    copy->h_length = result->h_length;
+    copy->h_addrtype = result->h_addrtype;
+
+    char ip_address[INET6_ADDRSTRLEN];
+    memset(ip_address, 0, INET6_ADDRSTRLEN);
+    
+    int h_aliases_len = array_len(result->h_aliases);
+    copy->h_aliases = (char **) Malloc((h_aliases_len + 1) * sizeof(char *));
+    int i;
+    struct in_addr addr;
+    for (i = 0; result->h_aliases[i] != NULL; i++) {
+        copy->h_aliases[i] = (char *) Malloc(strlen(result->h_aliases[i]));
+        strcpy(copy->h_aliases[i], result->h_aliases[i]);
+    }
+    copy->h_aliases[i] = NULL;
+
+    int h_addr_list_len = array_len(result->h_addr_list);
+    copy->h_addr_list = (char **) Malloc((h_addr_list_len + 1) * sizeof(char *));
+    for (i = 0; result->h_addr_list[i] != NULL; i++) {
+        copy->h_addr_list[i] = (char *) Malloc(strlen(result->h_addr_list[i]));
+        strcpy(copy->h_addr_list[i], result->h_addr_list[i]);
+    }
+    copy->h_addr_list[i] = NULL;
+    
+    V_dispatch(gethostbyname_mutex);
+
+    return copy;
+}
+
+static void print_host(struct hostent *host) {
+    printf("\tname: %s\n", host->h_name);
+    printf("\tlength: %d\n", host->h_length);
+    printf("\taddrtype: %d\n", host->h_addrtype);
+    
+    int h_aliases_len = array_len(host->h_aliases);
+    printf("\taliases (%d):\n", h_aliases_len);
+    for (int i = 0; i < h_aliases_len; i++)
+        printf("\t\t - %s\n", host->h_aliases[i]);
+
+    
+    int h_addr_list_len = array_len(host->h_addr_list);
+    printf("\taddresses (%d):\n", h_addr_list_len);
+    char ip_address[INET6_ADDRSTRLEN];
+    memset(ip_address, 0, INET6_ADDRSTRLEN); 
+    struct in_addr ** p1 = NULL;
+    struct in6_addr ** p2 = NULL;
+
+    switch (host->h_addrtype) {
+        case AF_INET:
+            p1 = (struct in_addr **) host->h_addr_list;
+
+            for(int i = 0; p1[i] != NULL; i++) {
+                inet_ntop(AF_INET, &p1[i], ip_address, INET_ADDRSTRLEN);
+                printf("\t\t - %s\n", ip_address);
+                *ip_address = '\0';
+            }
+        break;
+        case AF_INET6:
+            p2 = (struct in6_addr **) host->h_addr_list;
+            for(int i = 0; p2[i] != NULL; i++) {
+                inet_ntop(AF_INET6, &p2[i], ip_address, INET6_ADDRSTRLEN);
+                printf("\t\t - %s\n", ip_address);
+                *ip_address = '\0';
+            }
+        break;
+    }
+}
+
+int main(int argc, char* argv[]) {
+    struct hostent *yahoo_entry;
+    struct hostent *google_entry;
+    char *yahoo = "www.yahoo.com";
+    char *google = "www.google.com";
+
+    yahoo_entry = gethostbyname_ts(yahoo);
+    google_entry = gethostbyname_ts(google);
+    printf("results for %s:\n", yahoo);
+    print_host(yahoo_entry);
+    printf("\n");
+    printf("results for %s:\n", google);
+    print_host(google_entry);
+
+    return 0;
+}
