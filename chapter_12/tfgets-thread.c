@@ -1,0 +1,48 @@
+#include "csapp.h"
+#include "macos_helpers.h"
+
+#define TIMEOUT_SECONDS 5
+
+struct fgets_params {
+    char *ptr;
+    int n;
+    FILE *stream;
+    char *buf;
+    dispatch_semaphore_t threads_ready;
+};
+
+static void *timeout_thread(void *vargp) {
+    Pthread_detach(pthread_self());
+    dispatch_semaphore_t *threads_ready = (dispatch_semaphore_t *) vargp;
+    Sleep(TIMEOUT_SECONDS);
+    V_dispatch(*threads_ready);
+    Pthread_exit(0);
+}
+
+static void *fgets_thread(void *vargp) {
+    Pthread_detach(pthread_self());
+    struct fgets_params *params = (struct fgets_params *) vargp;
+    params->buf = Fgets(params->ptr, params->n, params->stream);
+    V_dispatch(params->threads_ready);
+    Pthread_exit(0);
+}
+
+char *tfgets(char *ptr, int n, FILE *stream) {
+    dispatch_semaphore_t threads_ready = dispatch_semaphore_create(0);
+    
+    struct fgets_params params = { ptr, n, stream, NULL, threads_ready };
+    pthread_t timeout_thread_id;
+    pthread_t fgets_thread_id;
+
+    Pthread_create(&timeout_thread_id, NULL, timeout_thread, &threads_ready);
+    Pthread_create(&fgets_thread_id, NULL, fgets_thread, &params);
+
+    P_dispatch(threads_ready);
+
+    if (params.buf)
+        Pthread_cancel(timeout_thread_id);
+    else
+        Pthread_cancel(fgets_thread_id);
+        
+    return params.buf;
+}
